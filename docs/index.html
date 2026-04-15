@@ -403,6 +403,12 @@ html,body{height:100%;background:var(--bg);font-family:'DM Sans',sans-serif;colo
           <div id="gdrive-last-sync" style="font-size:10px;color:var(--t3);font-family:'DM Mono',monospace;"></div>
         </div>
       </div>
+      <div class="backup-banner" id="fb-card" style="background:#fff8f0;border-color:#ffb347;">
+        <div class="backup-title" style="color:#c45000;">&#9889; Firebase Live Sync</div>
+        <div class="backup-sub" id="fb-status-msg">Connecting to Firebase...</div>
+        <div id="fb-sync-indicator" style="display:none;font-size:10px;color:#c45000;font-family:'DM Mono',monospace;margin-top:2px;">&#9679; Live sync active</div>
+        <div id="fb-last-sync" style="font-size:10px;color:var(--t3);font-family:'DM Mono',monospace;"></div>
+      </div>
       <div class="card">
         <div class="card-head"><span class="card-title">Manual Backup</span></div>
         <div style="padding:12px 16px;">
@@ -492,6 +498,8 @@ setEntryNo();renderDash();renderAsgnBanner();
 function save(){
   try{localStorage.setItem('pi_exp',JSON.stringify(exps));localStorage.setItem('pi_mile',JSON.stringify(miles));localStorage.setItem('pi_asgn',JSON.stringify(asgns));}catch(e){toast('Storage full — export backup now!');}
   document.getElementById('sync-info').textContent=exps.length+' entries · saved '+new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+  // Push to Firebase in background
+  if(typeof fbPush==='function') fbPush();
 }
 function setEntryNo(){document.getElementById('entry-no').textContent=String(exps.length+1).padStart(4,'0');}
 
@@ -892,6 +900,109 @@ function mergeData(data){
 gdriveHandleRedirect();
 if(!gdriveToken) gdriveRestoreSession();
 
+
+
+// ============================================================
+// FIREBASE FIRESTORE REAL-TIME SYNC
+// Firebase config for PI Field Ledger
+// ============================================================
+const FB_CONFIG = {
+  apiKey: "AIzaSyBEnSfhoRIyMbYPvr5AsyEzcI3Z4yWLGww",
+  authDomain: "pi-field-ledger-c46df.firebaseapp.com",
+  projectId: "pi-field-ledger-c46df",
+  storageBucket: "pi-field-ledger-c46df.firebasestorage.app",
+  messagingSenderId: "727246152388",
+  appId: "1:727246152388:web:feff6e04f331db48f75f91"
+};
+
+let fbDb = null;
+let fbInitialized = false;
+let fbSyncing = false;
+const FB_DOC_PATH = 'ledgers/pi_field_ledger';
+
+function fbSetStatus(msg, isError) {
+  const el = document.getElementById('fb-status-msg');
+  if (el) { el.textContent = msg; el.style.color = isError ? '#c00' : ''; }
+}
+function fbSetLastSync(msg) {
+  const el = document.getElementById('fb-last-sync');
+  if (el) el.textContent = msg;
+}
+
+async function fbInit() {
+  try {
+    // Dynamically import Firebase modules (SDK v9 modular)
+    const { initializeApp } = await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js');
+    const { getFirestore, doc, getDoc, setDoc, onSnapshot, serverTimestamp }
+      = await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js');
+
+    const app = initializeApp(FB_CONFIG, 'pi-ledger');
+    fbDb = getFirestore(app);
+    fbInitialized = true;
+    fbSetStatus('✓ Firebase connected — syncing in real-time');
+    document.getElementById('fb-sync-indicator').style.display = '';
+
+    // Listen for remote changes in real-time
+    const docRef = doc(fbDb, FB_DOC_PATH);
+    onSnapshot(docRef, (snap) => {
+      if (!snap.exists()) {
+        // No remote data yet — push local data up
+        fbPush();
+        return;
+      }
+      const data = snap.data();
+      const remoteTs = data.updatedAt ? data.updatedAt.toMillis() : 0;
+      const localTs = parseInt(localStorage.getItem('fb_last_push') || '0');
+      // Only merge if remote is newer than our last push (avoid echo loop)
+      if (remoteTs > localTs + 2000) {
+        mergeData(data);
+        save();
+        renderDash();
+        renderBackupSummary();
+        fbSetLastSync('Live sync: ' + new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}));
+      }
+    }, (err) => {
+      fbSetStatus('Firebase error: ' + err.message, true);
+    });
+
+    // Do initial push if we have local data
+    if (exps.length || miles.length || asgns.length) {
+      await fbPush();
+    }
+
+  } catch (err) {
+    fbSetStatus('Firebase unavailable (offline mode)', true);
+    console.warn('Firebase init error:', err);
+  }
+}
+
+async function fbPush() {
+  if (!fbInitialized || !fbDb || fbSyncing) return;
+  fbSyncing = true;
+  try {
+    const { doc, setDoc, serverTimestamp } = await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js');
+    const docRef = doc(fbDb, FB_DOC_PATH);
+    // Strip receipt images from Firebase (too large — keep in localStorage/Drive only)
+    const expsNoRcpt = exps.map(e => { const {receipt, ...rest} = e; return rest; });
+    await setDoc(docRef, {
+      exps: expsNoRcpt,
+      miles,
+      asgns,
+      version: 1,
+      device: /iPhone|iPad/.test(navigator.userAgent) ? 'iPhone' : 'Desktop',
+      updatedAt: serverTimestamp()
+    });
+    localStorage.setItem('fb_last_push', Date.now().toString());
+    fbSetLastSync('Last pushed: ' + new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}));
+  } catch (err) {
+    console.warn('Firebase push error:', err);
+  } finally {
+    fbSyncing = false;
+  }
+}
+
+// Initialize Firebase on page load
+fbInit();
 
 // Intercept browser back button — keep user inside the app
 history.pushState(null, '', window.location.href);
