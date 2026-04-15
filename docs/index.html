@@ -183,6 +183,13 @@ html,body{height:100%;background:var(--bg);font-family:'DM Sans',sans-serif;colo
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
 .empty-msg{padding:2rem;text-align:center;color:var(--t3);font-size:13px;line-height:1.6;}
 @keyframes blink{0%,100%{opacity:1;}50%{opacity:.3;}}
+/* VOICE INPUT */
+.mic-wrap{position:relative;display:flex;align-items:center;}
+.mic-wrap .fi{flex:1;}
+.mic-btn{background:none;border:none;cursor:pointer;padding:4px 6px;color:var(--t3);font-size:18px;flex-shrink:0;transition:color .15s;}
+.mic-btn.listening{color:var(--red);animation:blink 1s infinite;}
+.mic-btn:disabled{opacity:.3;cursor:default;}
+
 </style>
 </head>
 <body>
@@ -215,7 +222,7 @@ html,body{height:100%;background:var(--bg);font-family:'DM Sans',sans-serif;colo
             <div><span class="fl">Date</span><input class="fi" type="date" id="f-date"/></div>
             <div><span class="fl">Amount</span><div class="amt-box"><span class="amt-sym">$</span><input class="amt-in" type="number" id="f-amount" placeholder="0.00" step="0.01" min="0" inputmode="decimal"/></div></div>
           </div>
-          <div class="fg"><span class="fl">Pay to / Vendor</span><input class="fi" type="text" id="f-payee" placeholder="Vendor, store, or payee..." autocomplete="off"/></div>
+          <div class="fg"><span class="fl">Pay to / Vendor</span><div class="mic-wrap"><input class="fi" type="text" id="f-payee" placeholder="Vendor, store, or payee..." autocomplete="off"/><button class="mic-btn" onclick="voiceInput('f-payee',this)" title="Speak">🎤</button></div></div>
           <div class="fg">
             <span class="fl">Category</span>
             <div class="cat-grid">
@@ -238,7 +245,7 @@ html,body{height:100%;background:var(--bg);font-family:'DM Sans',sans-serif;colo
               <div id="rzip" style="display:none;"><div class="rcpt-preview"><img id="rtimg" class="rcpt-thumb" src="" alt=""/><div><div style="font-size:12px;font-weight:500;margin-bottom:4px;">Receipt attached</div><button class="rcpt-clr" onclick="clearRcpt(event)">Remove</button></div></div></div>
             </div>
           </div>
-          <div class="fg" style="margin-bottom:0;"><span class="fl">Memo / Notes</span><input class="fi" type="text" id="f-memo" placeholder="Details, location, purpose..."/></div>
+          <div class="fg" style="margin-bottom:0;"><span class="fl">Memo / Notes</span><div class="mic-wrap"><input class="fi" type="text" id="f-memo" placeholder="Details, location, purpose..."/><button class="mic-btn" onclick="voiceInput('f-memo',this)" title="Speak">🎤</button></div></div>
         </div>
         <div class="check-foot">
           <div class="cf-sub">PRENSA INTERNACIONAL · EDITORIAL PHOTOGRAPHY · EXPENSE LEDGER</div>
@@ -263,10 +270,10 @@ html,body{height:100%;background:var(--bg);font-family:'DM Sans',sans-serif;colo
       <div class="asgn-form">
         <div class="asgn-form-title">New Assignment</div>
         <div class="af-grid">
-          <div><span class="fl">Assignment Name</span><input class="fi" type="text" id="af-name" placeholder="e.g. Lakers vs Warriors"/></div>
-          <div><span class="fl">Client / Publication</span><input class="fi" type="text" id="af-client" placeholder="e.g. LA Times"/></div>
+          <div><span class="fl">Assignment Name</span><div class="mic-wrap"><input class="fi" type="text" id="af-name" placeholder="e.g. Lakers vs Warriors"/><button class="mic-btn" onclick="voiceInput('af-name',this)" title="Speak">🎤</button></div></div>
+          <div><span class="fl">Client / Publication</span><div class="mic-wrap"><input class="fi" type="text" id="af-client" placeholder="e.g. LA Times"/><button class="mic-btn" onclick="voiceInput('af-client',this)" title="Speak">🎤</button></div></div>
           <div><span class="fl">Date</span><input class="fi" type="date" id="af-date"/></div>
-          <div><span class="fl">Venue / Location</span><input class="fi" type="text" id="af-venue" placeholder="e.g. Crypto.com Arena"/></div>
+          <div><span class="fl">Venue / Location</span><div class="mic-wrap"><input class="fi" type="text" id="af-venue" placeholder="e.g. Crypto.com Arena"/><button class="mic-btn" onclick="voiceInput('af-venue',this)" title="Speak">🎤</button></div></div>
         </div>
         <div class="fg" style="margin-bottom:12px;"><span class="fl">Day Rate / Fee ($)</span><input class="fi" type="number" id="af-rate" placeholder="0.00" step="0.01" min="0" inputmode="decimal"/></div>
         <div class="fg" style="margin-bottom:12px;"><span class="fl">Sport / Type</span>
@@ -280,7 +287,7 @@ html,body{height:100%;background:var(--bg);font-family:'DM Sans',sans-serif;colo
             <button class="chip" data-sport="Other" onclick="pickSport(this)">📷 Other</button>
           </div>
         </div>
-        <div class="fg" style="margin-bottom:0;"><span class="fl">Notes</span><input class="fi" type="text" id="af-notes" placeholder="Game notes, credentials..."/></div>
+        <div class="fg" style="margin-bottom:0;"><span class="fl">Notes</span><div class="mic-wrap"><input class="fi" type="text" id="af-notes" placeholder="Game notes, credentials..."/><button class="mic-btn" onclick="voiceInput('af-notes',this)" title="Speak">🎤</button></div></div>
         <div style="margin-top:14px;"><button class="add-btn" onclick="addAssignment()">+ Create Assignment</button></div>
       </div>
       <div id="asgn-list-wrap"><div class="empty-msg">No assignments yet. Create one above.</div></div>
@@ -356,7 +363,7 @@ html,body{height:100%;background:var(--bg);font-family:'DM Sans',sans-serif;colo
             <div class="mf"><span class="mlbl">Miles</span><input class="min" type="number" id="m-miles" placeholder="0" min="0" step="0.1" oninput="calcMile()" inputmode="decimal"/></div>
             <div class="mf"><span class="mlbl">Assignment</span><select class="min" id="m-asgn"><option value="">None</option></select></div>
           </div>
-          <div class="mf" style="margin-bottom:14px;"><span class="mlbl">Destination / Purpose</span><input class="min" type="text" id="m-purpose" placeholder="e.g. Dodger Stadium, Crypto.com Arena..."/></div>
+          <div class="mf" style="margin-bottom:14px;"><span class="mlbl">Destination / Purpose</span><div class="mic-wrap"><input class="min" style="border-bottom:1px solid #ccc;" type="text" id="m-purpose" placeholder="e.g. Dodger Stadium..."/><button class="mic-btn" onclick="voiceInput('m-purpose',this)" title="Speak">🎤</button></div></div>
           <div class="mile-result">
             <div>
               <div style="font-size:10px;color:var(--t3);font-family:'DM Mono',monospace;text-transform:uppercase;margin-bottom:2px;">Trip deduction</div>
@@ -904,6 +911,73 @@ gdriveHandleRedirect();
 if(!gdriveToken) gdriveRestoreSession();
 
 
+
+
+// ============================================================
+// VOICE INPUT — Web Speech API (works on Safari iPhone + Chrome)
+// ============================================================
+let activeRecognition = null;
+
+function voiceInput(fieldId, btn) {
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SpeechRecognition) {
+    toast('Voice input not supported on this browser.');
+    return;
+  }
+
+  // If already listening on this button, stop it
+  if (activeRecognition) {
+    activeRecognition.stop();
+    activeRecognition = null;
+    return;
+  }
+
+  const recognition = new SpeechRecognition();
+  recognition.lang = 'en-US';
+  recognition.continuous = false;
+  recognition.interimResults = false;
+  recognition.maxAlternatives = 1;
+
+  activeRecognition = recognition;
+  btn.classList.add('listening');
+  btn.textContent = '🔴';
+
+  recognition.onresult = (e) => {
+    const transcript = e.results[0][0].transcript;
+    const field = document.getElementById(fieldId);
+    if (field) {
+      field.value = transcript;
+      field.dispatchEvent(new Event('input')); // trigger any listeners
+    }
+    toast('Got it: "' + transcript + '"');
+  };
+
+  recognition.onerror = (e) => {
+    let msg = 'Voice error';
+    if (e.error === 'not-allowed') msg = 'Microphone permission denied — check browser settings.';
+    else if (e.error === 'no-speech') msg = 'No speech detected — try again.';
+    else if (e.error === 'network') msg = 'Network error — try again.';
+    toast(msg);
+  };
+
+  recognition.onend = () => {
+    btn.classList.remove('listening');
+    btn.textContent = '🎤';
+    activeRecognition = null;
+  };
+
+  recognition.start();
+}
+
+// Disable mic buttons on browsers that don't support it
+(function checkVoiceSupport() {
+  if (!window.SpeechRecognition && !window.webkitSpeechRecognition) {
+    document.querySelectorAll('.mic-btn').forEach(b => {
+      b.disabled = true;
+      b.title = 'Voice input not supported on this browser';
+    });
+  }
+})();
 
 // ============================================================
 // FIREBASE FIRESTORE REAL-TIME SYNC
