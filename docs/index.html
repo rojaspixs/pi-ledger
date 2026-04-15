@@ -575,9 +575,8 @@ function renderAsgnList(){
   }).join('')+'</div>';
 }
 function openAsgnPicker(){
+  const list=document.getElementById('asgn-pick-list');
   if(!asgns.length){
-    // Show modal with helpful prompt instead of dead-end toast
-    const list=document.getElementById('asgn-pick-list');
     list.innerHTML=`<div style="text-align:center;padding:20px 10px;">
       <div style="font-size:32px;margin-bottom:12px;">📋</div>
       <div style="font-family:'Playfair Display',serif;font-size:16px;color:var(--dark);margin-bottom:8px;">No assignments yet</div>
@@ -588,7 +587,11 @@ function openAsgnPicker(){
     return;
   }
   const si={Baseball:'⚾',Basketball:'🏀',Football:'🏈',Soccer:'⚽',Hockey:'🏒',Editorial:'📰',Other:'📷'};
-  document.getElementById('asgn-pick-list').innerHTML=asgns.map(a=>{const icon=a.sport?(si[a.sport]||'📷')+' ':'';return `<div class="asgn-pick-item${String(curAsgn)===String(a.id)?' on':''}" onclick="curAsgn=String(${a.id});renderAsgnBanner();document.getElementById('asgn-modal').classList.remove('open');"><div style="font-weight:500;">${icon}${a.name}</div><div class="apm">${a.client?a.client+' · ':''}${a.date}</div></div>`;}).join('');
+  list.innerHTML=asgns.map(a=>{
+    const icon=a.sport?(si[a.sport]||'📷')+' ':'';
+    const isSelected=String(curAsgn)===String(a.id);
+    return `<div class="asgn-pick-item${isSelected?' on':''}" onclick="curAsgn='${a.id}';renderAsgnBanner();document.getElementById('asgn-modal').classList.remove('open');"><div style="font-weight:500;">${icon}${a.name}</div><div class="apm">${a.client?a.client+' · ':''}${a.date}</div></div>`;
+  }).join('');
   document.getElementById('asgn-modal').classList.add('open');
 }
 function renderAsgnBanner(){
