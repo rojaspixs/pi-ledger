@@ -489,9 +489,9 @@ html,body{height:100%;background:var(--bg);font-family:'DM Sans',sans-serif;colo
 const IRS=0.70,MO=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 const now=new Date(),CY=now.getFullYear();
 let exps=[],miles=[],asgns=[];
-try{exps=JSON.parse(localStorage.getItem('pi_exp')||'[]');}catch(e){}
-try{miles=JSON.parse(localStorage.getItem('pi_mile')||'[]');}catch(e){}
-try{asgns=JSON.parse(localStorage.getItem('pi_asgn')||'[]');}catch(e){}
+try{exps=JSON.parse(localStorage.getItem('pi_exp')||'[]').map(x=>({...x,id:String(x.id)}));}catch(e){}
+try{miles=JSON.parse(localStorage.getItem('pi_mile')||'[]').map(x=>({...x,id:String(x.id)}));}catch(e){}
+try{asgns=JSON.parse(localStorage.getItem('pi_asgn')||'[]').map(x=>({...x,id:String(x.id)}));}catch(e){}
 let selCat='',curAsgn='',curSport='',activeTab='new',filterCat='all',filterAsgn='all',modalExpId=null;
 let pendB64='',pendMime='image/jpeg';
 
@@ -536,7 +536,7 @@ function submitExpense(){
   const date=document.getElementById('f-date').value,payee=document.getElementById('f-payee').value.trim(),amount=parseFloat(document.getElementById('f-amount').value),memo=document.getElementById('f-memo').value.trim();
   if(!date||!payee||isNaN(amount)||amount<=0||!selCat){toast('Fill in date, payee, amount & category.');return;}
   const a=asgns.find(x=>String(x.id)===String(curAsgn));
-  exps.unshift({id:Date.now(),date,payee,amount,category:selCat,assignment:curAsgn,assignmentName:a?a.name:'',memo,receipt:pendB64});
+  exps.unshift({id:String(Date.now()),date,payee,amount,category:selCat,assignment:curAsgn?String(curAsgn):'',assignmentName:a?a.name:'',memo,receipt:pendB64});
   save();
   document.getElementById('f-payee').value='';document.getElementById('f-amount').value='';document.getElementById('f-memo').value='';document.getElementById('f-date').value=now.toISOString().split('T')[0];
   document.querySelectorAll('.chip:not([data-sport])').forEach(c=>c.classList.remove('on'));selCat='';clearRcpt({stopPropagation:()=>{}});
@@ -548,7 +548,7 @@ function submitExpense(){
 function addAssignment(){
   const name=document.getElementById('af-name').value.trim(),client=document.getElementById('af-client').value.trim(),date=document.getElementById('af-date').value,venue=document.getElementById('af-venue').value.trim(),rate=parseFloat(document.getElementById('af-rate').value)||0,notes=document.getElementById('af-notes').value.trim();
   if(!name){toast('Enter an assignment name.');return;}
-  asgns.unshift({id:Date.now(),name,client,date,venue,rate,notes,sport:curSport});
+  asgns.unshift({id:String(Date.now()),name,client,date,venue,rate,notes,sport:curSport});
   save();document.getElementById('af-name').value='';document.getElementById('af-client').value='';document.getElementById('af-venue').value='';document.getElementById('af-rate').value='';document.getElementById('af-notes').value='';
   document.querySelectorAll('[data-sport]').forEach(c=>c.classList.remove('on'));curSport='';
   // Auto-select newly created assignment and jump to Home tab
@@ -704,7 +704,7 @@ function renderBackupSummary(){
 // MILEAGE
 function calcMile(){const m=parseFloat(document.getElementById('m-miles').value)||0;document.getElementById('mile-ded').textContent='$'+(m*IRS).toFixed(2);}
 function renderMileAsgnSel(){const sel=document.getElementById('m-asgn'),cur=sel.value;sel.innerHTML='<option value="">None</option>'+asgns.map(a=>`<option value="${a.id}">${a.name}</option>`).join('');if(cur)sel.value=cur;}
-function addMile(){const date=document.getElementById('m-date').value,mi=parseFloat(document.getElementById('m-miles').value),purpose=document.getElementById('m-purpose').value.trim(),asgnId=document.getElementById('m-asgn').value;if(!date||isNaN(mi)||mi<=0){toast('Enter date and miles.');return;}const a=asgns.find(x=>x.id==asgnId);miles.unshift({id:Date.now(),date,miles:mi,purpose,assignment:asgnId,assignmentName:a?a.name:'',deduction:+(mi*IRS).toFixed(2)});save();document.getElementById('m-miles').value='';document.getElementById('m-purpose').value='';document.getElementById('mile-ded').textContent='$0.00';renderMileLog();renderDash();toast('Trip logged!');}
+function addMile(){const date=document.getElementById('m-date').value,mi=parseFloat(document.getElementById('m-miles').value),purpose=document.getElementById('m-purpose').value.trim(),asgnId=document.getElementById('m-asgn').value;if(!date||isNaN(mi)||mi<=0){toast('Enter date and miles.');return;}const a=asgns.find(x=>x.id==asgnId);miles.unshift({id:String(Date.now()),date,miles:mi,purpose,assignment:asgnId?String(asgnId):'',assignmentName:a?a.name:'',deduction:+(mi*IRS).toFixed(2)});save();document.getElementById('m-miles').value='';document.getElementById('m-purpose').value='';document.getElementById('mile-ded').textContent='$0.00';renderMileLog();renderDash();toast('Trip logged!');}
 function renderMileLog(){const yrM=miles.filter(m=>m.date.startsWith(String(CY))),totMi=yrM.reduce((s,m)=>s+m.miles,0),totD=yrM.reduce((s,m)=>s+m.deduction,0);document.getElementById('mile-badge').textContent=totMi.toFixed(1)+' mi · $'+totD.toFixed(2);const el=document.getElementById('mile-list');if(!miles.length){el.innerHTML='<div class="empty-msg">No trips yet.</div>';return;}el.innerHTML=miles.slice(0,20).map(m=>`<div class="erow"><div class="ei"><div class="ep">${m.purpose||'Business trip'}</div><div class="badges">${m.assignmentName?`<span class="badge b-asgn">${m.assignmentName}</span>`:''}</div><div style="font-size:10px;color:var(--t3);margin-top:2px;">${m.date} · ${m.miles.toFixed(1)} mi</div></div><div class="er"><div class="eamt">$${m.deduction.toFixed(2)}</div><button class="edel" onclick="delMile(${m.id})">remove</button></div></div>`).join('');}
 function delMile(id){miles=miles.filter(m=>m.id!==id);save();renderMileLog();}
 
@@ -898,12 +898,21 @@ async function gdriveSync(){
 }
 
 function mergeData(data){
-  const eIds = new Set(exps.map(x=>x.id));
-  exps = [...exps,...(data.exps||[]).filter(x=>!eIds.has(x.id))].sort((a,b)=>b.id-a.id);
-  const mIds = new Set(miles.map(x=>x.id));
-  miles = [...miles,...(data.miles||[]).filter(x=>!mIds.has(x.id))].sort((a,b)=>b.id-a.id);
-  const aIds = new Set(asgns.map(x=>x.id));
-  asgns = [...asgns,...(data.asgns||[]).filter(x=>!aIds.has(x.id))].sort((a,b)=>b.id-a.id);
+  // Normalize all IDs to strings to avoid type mismatch after Firebase sync
+  const normalize = arr => (arr||[]).map(x=>({...x, id:String(x.id), assignment:x.assignment?String(x.assignment):x.assignment, assignmentName:x.assignmentName||''}));
+  const remExps = normalize(data.exps);
+  const remMiles = normalize(data.miles);
+  const remAsgns = normalize(data.asgns);
+  const eIds = new Set(exps.map(x=>String(x.id)));
+  exps = [...exps,...remExps.filter(x=>!eIds.has(String(x.id)))].sort((a,b)=>b.id-a.id);
+  const mIds = new Set(miles.map(x=>String(x.id)));
+  miles = [...miles,...remMiles.filter(x=>!mIds.has(String(x.id)))].sort((a,b)=>b.id-a.id);
+  const aIds = new Set(asgns.map(x=>String(x.id)));
+  asgns = [...asgns,...remAsgns.filter(x=>!aIds.has(String(x.id)))].sort((a,b)=>b.id-a.id);
+  // Normalize existing local IDs too
+  exps = exps.map(x=>({...x,id:String(x.id)}));
+  miles = miles.map(x=>({...x,id:String(x.id)}));
+  asgns = asgns.map(x=>({...x,id:String(x.id)}));
 }
 
 // On load: handle redirect OR restore session
