@@ -184,11 +184,12 @@ html,body{height:100%;background:var(--bg);font-family:'DM Sans',sans-serif;colo
 .empty-msg{padding:2rem;text-align:center;color:var(--t3);font-size:13px;line-height:1.6;}
 @keyframes blink{0%,100%{opacity:1;}50%{opacity:.3;}}
 /* VOICE INPUT */
-.mic-wrap{position:relative;display:flex;align-items:center;}
-.mic-wrap .fi{flex:1;}
-.mic-btn{background:none;border:none;cursor:pointer;padding:4px 6px;color:var(--t3);font-size:18px;flex-shrink:0;transition:color .15s;}
+.mic-wrap{display:flex;align-items:flex-end;width:100%;gap:4px;}
+.mic-wrap .fi,.mic-wrap .min{flex:1;min-width:0;}
+.mic-btn{background:none;border:none;border-bottom:1px solid transparent;cursor:pointer;padding:4px 2px 4px 4px;color:var(--t3);font-size:16px;flex-shrink:0;transition:color .15s;line-height:1;margin-bottom:1px;}
 .mic-btn.listening{color:var(--red);animation:blink 1s infinite;}
 .mic-btn:disabled{opacity:.3;cursor:default;}
+.af-grid .mic-wrap{display:flex;align-items:flex-end;}
 
 </style>
 </head>
