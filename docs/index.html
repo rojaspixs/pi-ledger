@@ -8,8 +8,8 @@
 <meta name="apple-mobile-web-app-title" content="PI Expenses"/>
 <meta name="theme-color" content="#ffffff"/>
 <title>Prensa Internacional — Field Ledger</title>
-<!-- BUILD: 2026-04-16-v3 — added + New Assignment button to picker modal -->
-<meta name="build-version" content="2026-04-16-v3"/>
+<!-- BUILD: 2026-04-16-v4.1 — added visible build badge to topbar -->
+<meta name="build-version" content="2026-04-16-v4.1"/>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400&family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500&display=swap');
 :root{
@@ -28,6 +28,7 @@ html,body{height:100%;background:var(--bg);font-family:'DM Sans',sans-serif;colo
 .top-right{display:flex;align-items:center;gap:10px;}
 .sync-info{font-family:'DM Mono',monospace;font-size:9px;color:var(--t3);}
 .year-pill{font-family:'DM Mono',monospace;font-size:10px;color:var(--dark);border:.5px solid rgba(51,51,51,.3);padding:3px 10px;border-radius:20px;}
+.build-pill{font-family:'DM Mono',monospace;font-size:9px;color:var(--red);background:rgba(102,0,0,.08);border:.5px solid rgba(102,0,0,.3);padding:2px 7px;border-radius:20px;letter-spacing:.5px;}
 .bottom-nav{position:fixed;bottom:0;left:0;right:0;background:var(--dark);border-top:2px solid var(--red);display:flex;padding-bottom:var(--sb);z-index:100;max-width:900px;margin:0 auto;}
 .nb{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:9px 4px;border:none;background:transparent;cursor:pointer;color:rgba(255,255,204,.35);font-size:9px;font-family:'DM Sans',sans-serif;transition:color .15s;}
 .nb.on{color:var(--cream);}
@@ -193,6 +194,21 @@ html,body{height:100%;background:var(--bg);font-family:'DM Sans',sans-serif;colo
 .mic-btn.listening{color:var(--red);animation:blink 1s infinite;}
 .mic-btn:disabled{opacity:.3;cursor:default;}
 .af-grid > div{min-width:0;overflow:hidden;}
+/* Dictionary chips under input fields */
+.dict-chips{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px;}
+.dict-chip{background:#f0ede8;border:1px solid transparent;border-radius:14px;padding:4px 10px;font-size:11px;font-family:'DM Sans',sans-serif;color:#555;cursor:pointer;transition:all .12s;}
+.dict-chip:hover{background:var(--red);color:#fff;border-color:var(--red);}
+/* Dictionary manager in Sync tab */
+.dict-tabs{display:flex;gap:4px;margin-bottom:10px;border-bottom:1px solid var(--bdr);}
+.dict-tab{flex:1;padding:8px;background:none;border:none;font-size:11px;font-family:'DM Mono',monospace;letter-spacing:1px;text-transform:uppercase;color:var(--t3);cursor:pointer;border-bottom:2px solid transparent;}
+.dict-tab.on{color:var(--red);border-bottom-color:var(--red);}
+.dict-list{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;max-height:240px;overflow-y:auto;padding:4px 0;}
+.dict-item{background:#fff;border:1px solid var(--bdr2);border-radius:14px;padding:5px 10px;font-size:12px;display:flex;align-items:center;gap:6px;}
+.dict-item .del{background:none;border:none;cursor:pointer;color:var(--t3);font-size:14px;padding:0;line-height:1;}
+.dict-item .del:hover{color:var(--red);}
+.dict-add{display:flex;gap:6px;margin-top:8px;}
+.dict-add input{flex:1;border:1px solid var(--bdr2);border-radius:8px;padding:8px 12px;font-size:13px;font-family:'DM Sans',sans-serif;}
+.dict-add button{background:var(--red);color:#fff;border:none;border-radius:8px;padding:0 14px;font-size:13px;cursor:pointer;}
 /* Defensive: guarantee Assignments form and button are always visible */
 #sec-asgn{display:none;}
 #sec-asgn.on{display:block !important;}
@@ -208,6 +224,7 @@ html,body{height:100%;background:var(--bg);font-family:'DM Sans',sans-serif;colo
     <div class="top-right">
       <span class="sync-info" id="sync-info">—</span>
       <div class="year-pill">FY 2026</div>
+      <div class="build-pill" onclick="toast('Build 2026-04-16-v4.1 — voice dictionary, + New Assignment in picker, duplicate-ID fix');" title="Tap for build details">v4.1</div>
     </div>
   </div>
   <div class="content" id="content">
@@ -231,7 +248,7 @@ html,body{height:100%;background:var(--bg);font-family:'DM Sans',sans-serif;colo
             <div><span class="fl">Date</span><input class="fi" type="date" id="f-date"/></div>
             <div><span class="fl">Amount</span><div class="amt-box"><span class="amt-sym">$</span><input class="amt-in" type="number" id="f-amount" placeholder="0.00" step="0.01" min="0" inputmode="decimal"/></div></div>
           </div>
-          <div class="fg"><span class="fl">Pay to / Vendor</span><div class="mic-wrap"><input class="fi" type="text" id="f-payee" placeholder="Vendor, store, or payee..." autocomplete="off"/><button class="mic-btn" onclick="voiceInput('f-payee',this)" title="Speak">🎤</button></div></div>
+          <div class="fg"><span class="fl">Pay to / Vendor</span><div class="mic-wrap"><input class="fi" type="text" id="f-payee" placeholder="Vendor, store, or payee..." autocomplete="off" onblur="this.value=normalizePhrase(this.value)"/><button class="mic-btn" onclick="voiceInput('f-payee',this)" title="Speak">🎤</button></div></div>
           <div class="fg">
             <span class="fl">Category</span>
             <div class="cat-grid">
@@ -254,7 +271,7 @@ html,body{height:100%;background:var(--bg);font-family:'DM Sans',sans-serif;colo
               <div id="rzip" style="display:none;"><div class="rcpt-preview"><img id="rtimg" class="rcpt-thumb" src="" alt=""/><div><div style="font-size:12px;font-weight:500;margin-bottom:4px;">Receipt attached</div><button class="rcpt-clr" onclick="clearRcpt(event)">Remove</button></div></div></div>
             </div>
           </div>
-          <div class="fg" style="margin-bottom:0;"><span class="fl">Memo / Notes</span><div class="mic-wrap"><input class="fi" type="text" id="f-memo" placeholder="Details, location, purpose..."/><button class="mic-btn" onclick="voiceInput('f-memo',this)" title="Speak">🎤</button></div></div>
+          <div class="fg" style="margin-bottom:0;"><span class="fl">Memo / Notes</span><div class="mic-wrap"><input class="fi" type="text" id="f-memo" placeholder="Details, location, purpose..." onblur="this.value=normalizePhrase(this.value)"/><button class="mic-btn" onclick="voiceInput('f-memo',this)" title="Speak">🎤</button></div></div>
         </div>
         <div class="check-foot">
           <div class="cf-sub">PRENSA INTERNACIONAL · EDITORIAL PHOTOGRAPHY · EXPENSE LEDGER</div>
@@ -279,10 +296,10 @@ html,body{height:100%;background:var(--bg);font-family:'DM Sans',sans-serif;colo
       <div class="asgn-form">
         <div class="asgn-form-title">New Assignment</div>
         <div class="af-grid">
-          <div><span class="fl">Assignment Name</span><div class="mic-wrap"><input class="fi" type="text" id="af-name" placeholder="e.g. Lakers vs Warriors"/><button class="mic-btn" onclick="voiceInput('af-name',this)" title="Speak">🎤</button></div></div>
-          <div><span class="fl">Client / Publication</span><div class="mic-wrap"><input class="fi" type="text" id="af-client" placeholder="e.g. LA Times"/><button class="mic-btn" onclick="voiceInput('af-client',this)" title="Speak">🎤</button></div></div>
+          <div><span class="fl">Assignment Name</span><div class="mic-wrap"><input class="fi" type="text" id="af-name" placeholder="e.g. Lakers vs Warriors" onblur="this.value=normalizePhrase(this.value)"/><button class="mic-btn" onclick="voiceInput('af-name',this)" title="Speak">🎤</button></div></div>
+          <div><span class="fl">Client / Publication</span><div class="mic-wrap"><input class="fi" type="text" id="af-client" placeholder="e.g. LA Times" onblur="this.value=normalizePhrase(this.value)"/><button class="mic-btn" onclick="voiceInput('af-client',this)" title="Speak">🎤</button></div></div>
           <div><span class="fl">Date</span><input class="fi" type="date" id="af-date"/></div>
-          <div><span class="fl">Venue / Location</span><div class="mic-wrap"><input class="fi" type="text" id="af-venue" placeholder="e.g. Crypto.com Arena"/><button class="mic-btn" onclick="voiceInput('af-venue',this)" title="Speak">🎤</button></div></div>
+          <div><span class="fl">Venue / Location</span><div class="mic-wrap"><input class="fi" type="text" id="af-venue" placeholder="e.g. Crypto.com Arena" onblur="this.value=normalizePhrase(this.value)"/><button class="mic-btn" onclick="voiceInput('af-venue',this)" title="Speak">🎤</button></div></div>
         </div>
         <div class="fg" style="margin-bottom:12px;"><span class="fl">Day Rate / Fee ($)</span><input class="fi" type="number" id="af-rate" placeholder="0.00" step="0.01" min="0" inputmode="decimal"/></div>
         <div class="fg" style="margin-bottom:12px;"><span class="fl">Sport / Type</span>
@@ -296,7 +313,7 @@ html,body{height:100%;background:var(--bg);font-family:'DM Sans',sans-serif;colo
             <button class="chip" data-sport="Other" onclick="pickSport(this)">📷 Other</button>
           </div>
         </div>
-        <div class="fg" style="margin-bottom:0;"><span class="fl">Notes</span><div class="mic-wrap"><input class="fi" type="text" id="af-notes" placeholder="Game notes, credentials..."/><button class="mic-btn" onclick="voiceInput('af-notes',this)" title="Speak">🎤</button></div></div>
+        <div class="fg" style="margin-bottom:0;"><span class="fl">Notes</span><div class="mic-wrap"><input class="fi" type="text" id="af-notes" placeholder="Game notes, credentials..." onblur="this.value=normalizePhrase(this.value)"/><button class="mic-btn" onclick="voiceInput('af-notes',this)" title="Speak">🎤</button></div></div>
         <div style="margin-top:14px;"><button class="add-btn" onclick="addAssignment()">+ Create Assignment</button></div>
       </div>
       <div id="asgn-list-wrap"><div class="empty-msg">No assignments yet. Create one above.</div></div>
@@ -372,7 +389,7 @@ html,body{height:100%;background:var(--bg);font-family:'DM Sans',sans-serif;colo
             <div class="mf"><span class="mlbl">Miles</span><input class="min" type="number" id="m-miles" placeholder="0" min="0" step="0.1" oninput="calcMile()" inputmode="decimal"/></div>
             <div class="mf"><span class="mlbl">Assignment</span><select class="min" id="m-asgn"><option value="">None</option></select></div>
           </div>
-          <div class="mf" style="margin-bottom:14px;"><span class="mlbl">Destination / Purpose</span><div class="mic-wrap"><input class="min" style="border-bottom:1px solid #ccc;" type="text" id="m-purpose" placeholder="e.g. Dodger Stadium..."/><button class="mic-btn" onclick="voiceInput('m-purpose',this)" title="Speak">🎤</button></div></div>
+          <div class="mf" style="margin-bottom:14px;"><span class="mlbl">Destination / Purpose</span><div class="mic-wrap"><input class="min" style="border-bottom:1px solid #ccc;" type="text" id="m-purpose" placeholder="e.g. Dodger Stadium..." onblur="this.value=normalizePhrase(this.value)"/><button class="mic-btn" onclick="voiceInput('m-purpose',this)" title="Speak">🎤</button></div></div>
           <div class="mile-result">
             <div>
               <div style="font-size:10px;color:var(--t3);font-family:'DM Mono',monospace;text-transform:uppercase;margin-bottom:2px;">Trip deduction</div>
@@ -440,6 +457,25 @@ html,body{height:100%;background:var(--bg);font-family:'DM Sans',sans-serif;colo
         <div class="card-head"><span class="card-title">Data Summary</span></div>
         <div style="padding:14px 16px;" id="backup-summary"></div>
       </div>
+      <div class="card">
+        <div class="card-head"><span class="card-title">Voice Dictionary</span><span style="font-family:'DM Mono',monospace;font-size:10px;color:var(--t3);" id="dict-count">0 entries</span></div>
+        <div style="padding:14px 16px;">
+          <div style="font-size:12px;color:var(--t2);margin-bottom:10px;line-height:1.5;">Add teams, venues, and clients you work with often. The app will auto-correct voice input and offer tap-to-fill chips under each field.</div>
+          <div class="dict-tabs">
+            <button class="dict-tab on" data-dict="teams" onclick="switchDictTab('teams')">Teams</button>
+            <button class="dict-tab" data-dict="venues" onclick="switchDictTab('venues')">Venues</button>
+            <button class="dict-tab" data-dict="clients" onclick="switchDictTab('clients')">Clients</button>
+          </div>
+          <div class="dict-list" id="dict-list"></div>
+          <div class="dict-add">
+            <input type="text" id="dict-new" placeholder="Add new entry..." onkeydown="if(event.key==='Enter')addDictEntry()"/>
+            <button onclick="addDictEntry()">+ Add</button>
+          </div>
+          <div style="margin-top:10px;display:flex;gap:8px;">
+            <button class="backup-btn outline" style="flex:1;font-size:11px;" onclick="resetDictToSeed()">Reset to defaults</button>
+          </div>
+        </div>
+      </div>
     </div>
 
   </div><!-- /content -->
@@ -488,6 +524,104 @@ try{asgns=JSON.parse(localStorage.getItem('pi_asgn')||'[]').map(x=>({...x,id:Str
 let selCat='',curAsgn='',curSport='',activeTab='new',filterCat='all',filterAsgn='all',modalExpId=null;
 let pendB64='',pendMime='image/jpeg';
 
+// ============================================================
+// DICTIONARY — phrase normalization for voice + typing
+// ============================================================
+// Pre-seeded with LA teams, national MLB/NBA/NFL, major venues, common clients.
+// Users can add/remove entries from the Sync tab.
+const DICT_SEED = {
+  teams: [
+    // LA teams
+    'Lakers','Clippers','Dodgers','Angels','Rams','Chargers','Kings','Ducks','Galaxy','LAFC','Sparks',
+    // NBA
+    'Warriors','Celtics','Heat','Knicks','Nets','Bucks','76ers','Bulls','Cavaliers','Pistons','Hawks','Hornets','Magic','Wizards','Raptors','Pacers',
+    'Suns','Nuggets','Timberwolves','Thunder','Trail Blazers','Jazz','Kings','Mavericks','Rockets','Grizzlies','Pelicans','Spurs',
+    // NFL
+    'Patriots','Bills','Dolphins','Jets','Ravens','Bengals','Browns','Steelers','Texans','Colts','Jaguars','Titans','Broncos','Chiefs','Raiders',
+    '49ers','Seahawks','Cardinals','Cowboys','Giants','Eagles','Commanders','Bears','Lions','Packers','Vikings','Falcons','Panthers','Saints','Buccaneers',
+    // MLB
+    'Yankees','Red Sox','Blue Jays','Orioles','Rays','White Sox','Guardians','Tigers','Twins','Royals','Astros','Mariners','Rangers','Athletics',
+    'Mets','Phillies','Nationals','Marlins','Braves','Cubs','Brewers','Cardinals','Pirates','Reds','Giants','Padres','Rockies','Diamondbacks'
+  ],
+  venues: [
+    'Crypto.com Arena','Dodger Stadium','SoFi Stadium','Rose Bowl','BMO Stadium','Angel Stadium','Honda Center','Intuit Dome','Pauley Pavilion',
+    'Banc of California Stadium','Galen Center','Staples Center','Coliseum','Santa Anita Park','StubHub Center'
+  ],
+  clients: [
+    'LA Times','Los Angeles Times','ESPN','Getty Images','Associated Press','AP','Reuters','USA Today','Sports Illustrated','The Athletic',
+    'NY Times','New York Times','Bloomberg','Wall Street Journal','WSJ'
+  ]
+};
+let dict = null;
+try { dict = JSON.parse(localStorage.getItem('pi_dict')); } catch(e){}
+if (!dict || !dict.teams) dict = JSON.parse(JSON.stringify(DICT_SEED));
+
+function saveDict(){ try{ localStorage.setItem('pi_dict', JSON.stringify(dict)); }catch(e){} }
+
+// Normalize a user phrase against the dictionary.
+// Handles: "vs"/"versus"/"v" -> "v.", casing corrections, known phrase lookups.
+function normalizePhrase(raw){
+  if(!raw) return raw;
+  let s = raw.trim();
+  // Collapse multiple spaces
+  s = s.replace(/\s+/g,' ');
+  // Normalize versus: "vs", "v", "versus", "v." -> "v."
+  s = s.replace(/\b(versus|vs|v\.?)\b/gi,'v.');
+  // "at" for away games stays lowercase
+  s = s.replace(/\bAt\b/g,'at');
+  // For each word-or-phrase in dictionary, do a case-insensitive replace preserving dictionary casing
+  const all = [...(dict.teams||[]), ...(dict.venues||[]), ...(dict.clients||[])];
+  // Sort longest-first so multi-word phrases match before single words
+  all.sort((a,b)=>b.length-a.length).forEach(entry=>{
+    // Build a regex that matches the entry as a whole word, case-insensitive
+    // Escape regex special chars in entry
+    const esc = entry.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+    const re = new RegExp('\\b' + esc + '\\b','gi');
+    s = s.replace(re, entry);
+  });
+  // Capitalize first letter
+  s = s.charAt(0).toUpperCase() + s.slice(1);
+  return s;
+}
+
+// Find dictionary suggestions matching a partial input
+function dictSuggest(partial, limit=6){
+  if(!partial) return [];
+  const p = partial.toLowerCase();
+  const all = [...(dict.teams||[]), ...(dict.venues||[]), ...(dict.clients||[])];
+  const uniq = [...new Set(all)];
+  return uniq.filter(e => e.toLowerCase().includes(p) && e.toLowerCase()!==p).slice(0,limit);
+}
+
+// Insert text into a field at the caret (or append with space)
+function insertIntoField(fieldId, text){
+  const f = document.getElementById(fieldId);
+  if(!f) return;
+  const cur = f.value.trim();
+  f.value = cur ? (cur + ' ' + text) : text;
+  f.dispatchEvent(new Event('input'));
+  f.focus();
+}
+
+// Render chip suggestions under a field
+function renderChips(fieldId, chipWrapId){
+  const f = document.getElementById(fieldId);
+  const w = document.getElementById(chipWrapId);
+  if(!f || !w) return;
+  const val = f.value.trim();
+  let suggestions;
+  if(!val){
+    // Show most common when empty: top 6 teams
+    suggestions = (dict.teams||[]).slice(0,6);
+  } else {
+    suggestions = dictSuggest(val, 6);
+  }
+  if(!suggestions.length){ w.innerHTML=''; return; }
+  w.innerHTML = suggestions.map(s =>
+    `<button class="dict-chip" onclick="insertIntoField('${fieldId}','${s.replace(/'/g,"\\'")}');renderChips('${fieldId}','${chipWrapId}')">${s}</button>`
+  ).join('');
+}
+
 // Init
 document.getElementById('f-date').value=now.toISOString().split('T')[0];
 document.getElementById('m-date').value=now.toISOString().split('T')[0];
@@ -516,7 +650,7 @@ function goTab(t){
   if(t==='receipts')renderReceipts();
   if(t==='invoice'){renderInvoiceSelects();renderInvoicePreview();}
   if(t==='mile'){renderMileLog();renderMileAsgnSel();}
-  if(t==='backup'){renderBackupSummary();}
+  if(t==='backup'){renderBackupSummary();renderDictList();}
 }
 
 // FORM
@@ -693,6 +827,59 @@ function renderBackupSummary(){
     <div><div class="sc-lbl">YTD Total</div><div class="sc-val">$${yrE.reduce((s,e)=>s+e.amount,0).toFixed(0)}</div></div>
   </div>`;
 }
+
+// DICTIONARY MANAGER
+let currentDictTab = 'teams';
+function switchDictTab(t){
+  currentDictTab = t;
+  document.querySelectorAll('.dict-tab').forEach(b=>b.classList.toggle('on', b.dataset.dict===t));
+  renderDictList();
+  document.getElementById('dict-new').placeholder = 'Add new ' + t.slice(0,-1) + '...';
+}
+function renderDictList(){
+  const list = document.getElementById('dict-list');
+  if(!list) return;
+  const entries = dict[currentDictTab] || [];
+  const total = (dict.teams||[]).length + (dict.venues||[]).length + (dict.clients||[]).length;
+  const cntEl = document.getElementById('dict-count');
+  if(cntEl) cntEl.textContent = total + ' entries';
+  if(!entries.length){
+    list.innerHTML = '<div style="color:var(--t3);font-size:12px;font-style:italic;padding:8px;">No entries yet. Add one below.</div>';
+    return;
+  }
+  list.innerHTML = entries.map((e,i)=>
+    `<div class="dict-item"><span>${e}</span><button class="del" onclick="delDictEntry(${i})" title="Remove">×</button></div>`
+  ).join('');
+}
+function addDictEntry(){
+  const input = document.getElementById('dict-new');
+  const val = input.value.trim();
+  if(!val){ toast('Enter a name first.'); return; }
+  dict[currentDictTab] = dict[currentDictTab] || [];
+  if(dict[currentDictTab].some(e => e.toLowerCase() === val.toLowerCase())){
+    toast('Already in dictionary.'); return;
+  }
+  dict[currentDictTab].unshift(val);
+  saveDict();
+  input.value = '';
+  renderDictList();
+  toast('✓ Added "' + val + '" to ' + currentDictTab);
+}
+function delDictEntry(idx){
+  const name = dict[currentDictTab][idx];
+  dict[currentDictTab].splice(idx,1);
+  saveDict();
+  renderDictList();
+  toast('Removed "' + name + '"');
+}
+function resetDictToSeed(){
+  if(!confirm('Reset dictionary to the built-in defaults? Your custom entries will be lost.')) return;
+  dict = JSON.parse(JSON.stringify(DICT_SEED));
+  saveDict();
+  renderDictList();
+  toast('Dictionary reset to defaults.');
+}
+
 
 // MILEAGE
 function calcMile(){const m=parseFloat(document.getElementById('m-miles').value)||0;document.getElementById('mile-ded').textContent='$'+(m*IRS).toFixed(2);}
@@ -946,12 +1133,14 @@ function voiceInput(fieldId, btn) {
 
   recognition.onresult = (e) => {
     const transcript = e.results[0][0].transcript;
+    const normalized = normalizePhrase(transcript);
     const field = document.getElementById(fieldId);
     if (field) {
-      field.value = transcript;
+      field.value = normalized;
       field.dispatchEvent(new Event('input')); // trigger any listeners
     }
-    toast('Got it: "' + transcript + '"');
+    const showNorm = (normalized !== transcript);
+    toast(showNorm ? ('Heard: "'+transcript+'" → '+normalized) : ('Got it: "'+normalized+'"'));
   };
 
   recognition.onerror = (e) => {
