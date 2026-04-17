@@ -4,12 +4,21 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0"/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
-<meta name="apple-mobile-web-app-status-bar-style" content="default"/>
-<meta name="apple-mobile-web-app-title" content="PI Expenses"/>
-<meta name="theme-color" content="#ffffff"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="PI Ledger"/>
+<meta name="theme-color" content="#0a0a0a"/>
 <title>Prensa Internacional — Field Ledger</title>
-<!-- BUILD: 2026-04-16-v4.1 — added visible build badge to topbar -->
-<meta name="build-version" content="2026-04-16-v4.1"/>
+<!-- BUILD: 2026-04-16-v4.2 — native polish: custom icon, splash, improved service worker -->
+<meta name="build-version" content="2026-04-16-v4.2"/>
+<!-- PWA manifest (Android/Chrome) -->
+<link rel="manifest" href="manifest.webmanifest"/>
+<!-- App icon (iOS home screen + generic favicons) -->
+<link rel="icon" type="image/svg+xml" href="icon.svg"/>
+<link rel="apple-touch-icon" href="icon.svg"/>
+<link rel="mask-icon" href="icon.svg" color="#d4af37"/>
+<!-- iOS splash screen (one image, scales to all devices) -->
+<link rel="apple-touch-startup-image" href="splash.svg"/>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400&family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500&display=swap');
 :root{
@@ -224,7 +233,7 @@ html,body{height:100%;background:var(--bg);font-family:'DM Sans',sans-serif;colo
     <div class="top-right">
       <span class="sync-info" id="sync-info">—</span>
       <div class="year-pill">FY 2026</div>
-      <div class="build-pill" onclick="toast('Build 2026-04-16-v4.1 — voice dictionary, + New Assignment in picker, duplicate-ID fix');" title="Tap for build details">v4.1</div>
+      <div class="build-pill" onclick="toast('Build 2026-04-16-v4.2 — custom app icon, splash screen, improved offline service worker');" title="Tap for build details">v4.2</div>
     </div>
   </div>
   <div class="content" id="content">
@@ -892,7 +901,32 @@ function delMile(id){miles=miles.filter(m=>m.id!==id);save();renderMileLog();}
 async function dlZip(){const wr=exps.filter(e=>e.receipt);if(!wr.length){toast('No receipts to download.');return;}toast('Building ZIP...');try{const zip=new JSZip(),folder=zip.folder('PrensaInternacional_'+CY);wr.forEach(e=>{const ext=e.receipt.includes('png')?'png':'jpg';folder.file(e.date+'_'+(e.assignmentName||'').replace(/[^a-zA-Z0-9]/g,'_').slice(0,12)+'_'+(e.payee||'').replace(/[^a-zA-Z0-9]/g,'_').slice(0,16)+'_$'+e.amount.toFixed(2)+'.'+ext,e.receipt.split(',')[1],{base64:true});});folder.file('expenses.csv','Date,Payee,Category,Assignment,Amount,Memo\n'+exps.map(e=>`${e.date},"${e.payee}","${e.category}","${e.assignmentName||''}",${e.amount.toFixed(2)},"${e.memo||''}"`).join('\n'));const blob=await zip.generateAsync({type:'blob'});const u=URL.createObjectURL(blob);const a=document.createElement('a');a.href=u;a.download='PrensaInternacional_'+CY+'.zip';a.click();URL.revokeObjectURL(u);toast('ZIP downloaded!');}catch(err){toast('ZIP error: '+err.message);}}
 function dl(name,type,content){const b=new Blob([content],{type});const u=URL.createObjectURL(b);const a=document.createElement('a');a.href=u;a.download=name;a.click();URL.revokeObjectURL(u);}
 function toast(msg){const el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');setTimeout(()=>el.classList.remove('show'),2800);}
-if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
+// Service worker registration with auto-update on new deploy.
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').then((reg) => {
+      // If a waiting worker is already there, activate it.
+      if (reg.waiting) reg.waiting.postMessage('SKIP_WAITING');
+      reg.addEventListener('updatefound', () => {
+        const nw = reg.installing;
+        if (!nw) return;
+        nw.addEventListener('statechange', () => {
+          if (nw.state === 'installed' && navigator.serviceWorker.controller) {
+            // New version ready — tell it to take over immediately.
+            nw.postMessage('SKIP_WAITING');
+          }
+        });
+      });
+    }).catch(() => {});
+    // When the new SW takes control, reload once so the user sees the new build.
+    let reloaded = false;
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      if (reloaded) return;
+      reloaded = true;
+      location.reload();
+    });
+  });
+}
 
 // ============================================================
 // GOOGLE DRIVE SYNC — redirect OAuth flow (works on all browsers + iPhone)
