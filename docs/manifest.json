@@ -1,22 +1,25 @@
 {
-  "name": "PI Field Ledger",
+  "name": "Prensa Internacional — Field Ledger",
   "short_name": "PI Ledger",
-  "description": "Prensa Internacional Field Expense Tracker",
-  "start_url": "/",
+  "description": "Field expense tracker for Prensa Internacional photographers.",
+  "start_url": "./",
+  "scope": "./",
   "display": "standalone",
-  "background_color": "#f0ede8",
-  "theme_color": "#ffffff",
   "orientation": "portrait",
+  "background_color": "#0a0a0a",
+  "theme_color": "#0a0a0a",
   "icons": [
     {
-      "src": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==",
-      "sizes": "192x192",
-      "type": "image/png"
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
     },
     {
-      "src": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==",
-      "sizes": "512x512",
-      "type": "image/png"
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
     }
   ]
 }
