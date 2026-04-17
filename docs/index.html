@@ -8,8 +8,8 @@
 <meta name="apple-mobile-web-app-title" content="PI Expenses"/>
 <meta name="theme-color" content="#ffffff"/>
 <title>Prensa Internacional — Field Ledger</title>
-<!-- BUILD: 2026-04-16-v2 — fixed duplicate IDs, hardened Assignments tab -->
-<meta name="build-version" content="2026-04-16-v2"/>
+<!-- BUILD: 2026-04-16-v3 — added + New Assignment button to picker modal -->
+<meta name="build-version" content="2026-04-16-v3"/>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400&family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500&display=swap');
 :root{
@@ -470,6 +470,7 @@ html,body{height:100%;background:var(--bg);font-family:'DM Sans',sans-serif;colo
     <div class="modal-handle"></div>
     <button class="modal-close" onclick="document.getElementById('asgn-modal').classList.remove('open')">×</button>
     <div style="font-family:'DM Mono',monospace;font-size:8px;letter-spacing:1px;text-transform:uppercase;color:var(--red);">Select Assignment</div>
+    <button class="modal-btn primary" style="margin-top:10px;width:100%;padding:13px;font-size:14px;" onclick="document.getElementById('asgn-modal').classList.remove('open');goTab('asgn');setTimeout(()=>document.getElementById('af-name').focus(),100);">+ New Assignment</button>
     <div class="asgn-pick-list" id="asgn-pick-list"></div>
     <button class="modal-btn outline" style="margin-top:12px;width:100%;" onclick="curAsgn='';renderAsgnBanner();document.getElementById('asgn-modal').classList.remove('open')">No Assignment</button>
   </div>
