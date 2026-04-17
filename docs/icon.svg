@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="112" fill="#0a0a0a"/>
+  <rect x="48" y="48" width="416" height="416" rx="80" fill="none" stroke="#c9a24a" stroke-width="2" opacity="0.28"/>
+  <text x="256" y="286" text-anchor="middle"
+        font-family="Georgia, 'Times New Roman', serif" font-weight="500"
+        font-size="300" fill="#d4af37" letter-spacing="-10">PI</text>
+</svg>
